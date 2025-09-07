@@ -14,12 +14,13 @@
 
     h1 {
       margin: 20px 0;
+      color: #ffcc00; /* gold title */
     }
 
     .gear-grid {
       display: grid;
-      grid-template-columns: repeat(3, 100px);
-      grid-template-rows: repeat(3, 100px);
+      grid-template-columns: repeat(3, 120px);
+      grid-template-rows: repeat(3, auto);
       gap: 15px;
       justify-content: center;
       margin-top: 30px;
@@ -31,26 +32,34 @@
       border-radius: 10px;
       padding: 5px;
       position: relative;
+      min-height: 180px;
     }
 
     .gear-slot img {
       width: 80px;
       height: 80px;
       object-fit: contain;
+      display: block;
+      margin: 0 auto;
     }
 
     .dropdown {
-      margin-top: 5px;
+      margin-top: 4px;
       width: 100%;
+      background: #000;
+      color: #fff;
+      border: 1px solid #4db8ff;
+      border-radius: 5px;
+      padding: 3px;
+      font-size: 12px;
     }
 
-    .stats {
-      margin-top: 20px;
-      text-align: left;
-      display: inline-block;
-      background: #222;
-      padding: 15px;
-      border-radius: 10px;
+    .stat-line {
+      color: #4db8ff;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 4px;
+      text-align: center;
     }
   </style>
 </head>
@@ -58,60 +67,113 @@
   <h1>Gear Optimizer</h1>
 
   <div class="gear-grid">
-    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
-    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
-    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
-
-    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
-    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
-    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
-
-    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
-    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
-    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
-  </div>
-
-  <div class="stats" id="stats">
-    <h2>Selected Stats</h2>
-    <ul id="stat-list"></ul>
+    <!-- 9 gear slots -->
+    <div class="gear-slot">
+      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+    </div>
+    <div class="gear-slot">
+      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+    </div>
+    <div class="gear-slot">
+      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+    </div>
+    <div class="gear-slot">
+      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+    </div>
+    <div class="gear-slot">
+      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+    </div>
+    <div class="gear-slot">
+      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+    </div>
+    <div class="gear-slot">
+      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+    </div>
+    <div class="gear-slot">
+      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+    </div>
+    <div class="gear-slot">
+      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+      <select class="dropdown"></select>
+    </div>
   </div>
 
   <script>
     const stats = [
       "Attack +10%",
+      "Attack +20%",
       "Attack Speed +5%",
+      "Attack Speed +10%",
       "Crit Chance +8%",
+      "Crit Chance +12%",
       "Crit Damage +20%",
+      "Crit Damage +30%",
       "Boss Damage +15%",
+      "Boss Damage +30%",
       "Evasion +6%",
+      "Evasion +12%",
       "Defense +12%",
-      "HP +500"
+      "HP +500",
+      "Move Speed +26%",
+      "Accuracy +10%"
     ];
 
     const dropdowns = document.querySelectorAll(".dropdown");
-    const statList = document.getElementById("stat-list");
 
-    dropdowns.forEach(dropdown => {
-      stats.forEach(stat => {
+    dropdowns.forEach((dropdown) => {
+      // Fill dropdown options
+      stats.forEach((stat) => {
         const option = document.createElement("option");
         option.value = stat;
         option.textContent = stat;
         dropdown.appendChild(option);
       });
 
-      dropdown.addEventListener("change", updateStats);
-    });
-
-    function updateStats() {
-      statList.innerHTML = "";
-      dropdowns.forEach((dropdown, i) => {
+      // On select, replace dropdown with stat line
+      dropdown.addEventListener("change", function () {
         if (dropdown.value) {
-          const li = document.createElement("li");
-          li.textContent = `Slot ${i+1}: ${dropdown.value}`;
-          statList.appendChild(li);
+          const statLine = document.createElement("div");
+          statLine.textContent = dropdown.value;
+          statLine.classList.add("stat-line");
+          dropdown.replaceWith(statLine);
         }
       });
-    }
+    });
   </script>
 </body>
 </html>
