@@ -1,284 +1,630 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gear Optimizer</title>
-  <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EHT Gear Optimizer</title>
+<style>
+  /* ===== Pixel/game vibe ===== */
+  @font-face {
+    font-family: 'PressStart';
+    src: local('Press Start 2P'), local('PressStart2P');
+    /* If device doesn't have it, fall back safely */
+  }
+  :root{
+    --bg:#0b0b0b;
+    --panel:#1b1b1b;
+    --frame:#3b2a00;
+    --gold:#ffcc00;
+    --blue:#4db8ff;
+    --red:#ff6666;
+  }
+  html,body{margin:0;padding:0;background:var(--bg);color:#fff;font-family:PressStart,Arial,Helvetica,sans-serif;}
+  *{box-sizing:border-box}
 
-    h1 {
-      margin: 20px 0;
-      color: #ffcc00; /* gold title */
-    }
+  .wrap{
+    max-width: 880px;
+    margin: 16px auto 80px;
+    padding: 12px;
+  }
 
-    .gear-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 120px);
-      grid-template-rows: repeat(3, auto);
-      gap: 15px;
-      justify-content: center;
-      margin-top: 30px;
-    }
+  h1{
+    font-size: 16px;
+    text-align:center;
+    color: var(--gold);
+    margin: 8px 0 12px;
+    text-shadow: 0 0 6px rgba(255,204,0,.3);
+  }
 
-    .gear-slot {
-      background: #222;
-      border: 2px solid #555;
-      border-radius: 10px;
-      padding: 5px;
-      position: relative;
-      min-height: 220px;
-    }
+  /* Pixel window/frame */
+  .panel{
+    background: var(--panel);
+    border: 2px solid #555;
+    box-shadow:
+      0 0 0 2px #222 inset,
+      0 0 0 4px #000 inset,
+      0 0 18px rgba(0,0,0,.6);
+    border-radius: 8px;
+    padding: 12px;
+  }
 
-    .gear-slot img {
-      width: 80px;
-      height: 80px;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto;
-    }
+  /* Circle board */
+  .board{
+    position: relative;
+    width: 520px;
+    height: 520px;
+    margin: 0 auto;
+    background:
+      radial-gradient(ellipse at center, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 60%),
+      repeating-linear-gradient(45deg, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,0) 2px 6px);
+    border: 2px solid #444;
+    border-radius: 16px;
+    box-shadow: 0 0 0 2px #000 inset, 0 0 24px rgba(0,0,0,.5);
+  }
 
-    .dropdown {
-      margin-top: 4px;
-      width: 100%;
-      background: #000;
-      color: #fff;
-      border: 1px solid #4db8ff;
-      border-radius: 5px;
-      padding: 3px;
-      font-size: 12px;
-    }
+  /* Character in center */
+  .center{
+    position:absolute; left:50%; top:50%;
+    transform: translate(-50%,-50%);
+    width: 156px; height: 156px;
+    display:flex; align-items:center; justify-content:center;
+    background:#0a0a0a;
+    border:2px solid #4a3a00;
+    box-shadow: 0 0 0 2px #000 inset, 0 0 12px rgba(0,0,0,.6);
+    border-radius: 10px;
+    padding: 8px;
+  }
+  .center img{width:128px; height:128px; image-rendering: pixelated; object-fit: contain;}
 
-    .stat-line {
-      color: #4db8ff;
-      font-size: 12px;
-      font-weight: bold;
-      margin-top: 4px;
-      text-align: center;
-    }
+  /* Gear slot frame */
+  .slot{
+    position:absolute;
+    width:128px; height:168px; /* room for stats below */
+    display:flex; flex-direction:column; align-items:center;
+    cursor:pointer;
+  }
+  .slot .frame{
+    width:128px; height:128px;
+    background:#0a0a0a;
+    border:2px solid #6b5a10;
+    box-shadow:
+      0 0 0 2px #000 inset,
+      0 0 10px rgba(0,0,0,.6),
+      0 0 0 0 rgba(77,184,255,0); /* glow off by default */
+    border-radius: 8px;
+    display:flex; align-items:center; justify-content:center;
+    transition: box-shadow .12s ease;
+  }
+  .slot.active .frame{
+    box-shadow:
+      0 0 0 2px #000 inset,
+      0 0 10px rgba(0,0,0,.6),
+      0 0 12px 3px rgba(77,184,255,.5);
+  }
+  .slot img{width:128px; height:128px; image-rendering: pixelated; object-fit: contain;}
+  .slot .stat-line{
+    color: var(--blue);
+    font-size: 10px;
+    font-weight: bold;
+    margin-top: 4px;
+    text-align: center;
+    line-height: 1.2;
+  }
 
-    .reset-btn {
-      margin-top: 6px;
-      width: 100%;
-      background: #333;
-      color: #ff6666;
-      border: 1px solid #ff6666;
-      border-radius: 5px;
-      padding: 3px;
-      font-size: 12px;
-      cursor: pointer;
-    }
+  /* Action bubble */
+  .bubble{
+    position:absolute; left:50%; top:138px; transform: translateX(-50%);
+    width: 200px;
+    background:#101010;
+    border:2px solid #3d3d3d;
+    box-shadow: 0 0 0 2px #000 inset, 0 8px 18px rgba(0,0,0,.5);
+    border-radius:8px;
+    padding:8px;
+    display:none;
+    z-index:5;
+  }
+  .slot.active .bubble{ display:block; }
 
-    .reset-btn:hover {
-      background: #ff6666;
-      color: #fff;
-    }
+  .btn{
+    width:100%;
+    border:1px solid #555;
+    background:#262626;
+    color:#fff;
+    border-radius:6px;
+    padding:6px 8px;
+    font-size: 10px;
+    margin-bottom:6px;
+    cursor:pointer;
+  }
+  .btn:hover{ background:#313131; }
+  .btn-red{
+    border-color: var(--red); color: var(--red);
+  }
+  .btn-red:hover{ background: var(--red); color:#000; }
 
-    .totals-box {
-      margin-top: 30px;
-      background: #222;
-      border: 1px solid #555;
-      border-radius: 10px;
-      padding: 15px;
-      display: inline-block;
-      text-align: left;
-    }
+  .select{
+    width:100%;
+    background:#000; color:#fff;
+    border:1px solid var(--blue);
+    border-radius:6px;
+    padding:4px;
+    font-size:10px;
+    margin-bottom:6px;
+  }
 
-    .totals-box h2 {
-      color: #ffcc00;
-      margin-bottom: 10px;
-    }
+  /* Totals box */
+  .totals{ margin:16px auto 0; max-width:520px; }
+  .totals h2{
+    font-size: 12px;
+    color: var(--gold);
+    margin: 0 0 8px;
+  }
+  .totals ul{ list-style:none; padding:0; margin:0; }
+  .totals li{ color:var(--blue); font-size: 11px; margin:3px 0; }
 
-    .totals-box li {
-      color: #4db8ff;
-      font-weight: bold;
-    }
-  </style>
+  /* Hunter manager trigger */
+  .topbar{
+    display:flex; justify-content:flex-end; gap:8px; margin:6px 0 10px;
+  }
+  .hunters-btn{
+    border:1px solid #777; background:#222; color:#fff; padding:6px 10px; border-radius:6px; font-size:10px; cursor:pointer;
+  }
+  .hunters-btn:hover{ background:#2c2c2c; }
+
+  /* Hunter modal */
+  .modalBackdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,.6);
+    display:none; align-items:center; justify-content:center; z-index:20;
+  }
+  .modal{
+    width: min(94vw, 560px);
+    background:#131313;
+    border:2px solid #555;
+    box-shadow: 0 0 0 2px #000 inset, 0 16px 28px rgba(0,0,0,.6);
+    border-radius:10px;
+    padding:12px;
+  }
+  .modal h3{
+    margin:0 0 10px; color:var(--gold); font-size:12px; text-align:center;
+  }
+  .row{ display:flex; gap:8px; margin:8px 0; }
+  .row > *{ flex:1; }
+  .text{ width:100%; padding:6px; font-size:10px; background:#0c0c0c; border:1px solid #555; color:#fff; border-radius:6px; }
+  .list{ max-height:180px; overflow:auto; background:#0c0c0c; border:1px solid #444; border-radius:6px; padding:6px; }
+  .list button{ margin:2px 0; }
+  .closeX{
+    position:absolute; right:12px; top:8px;
+    border:1px solid #777; background:#222; color:#fff; width:26px; height:26px; border-radius:6px; cursor:pointer;
+  }
+
+  /* --- Absolute positions for 8 gear slots around the circle --- */
+  /* Top (helm) */
+  #slot-2{ left:50%; top:10px; transform:translateX(-50%); }
+  /* Top-left (necklace) */
+  #slot-1{ left:60px; top:60px; }
+  /* Top-right (chest) */
+  #slot-3{ right:60px; top:60px; }
+  /* Left (gloves) */
+  #slot-6{ left:10px; top:50%; transform: translateY(-50%); }
+  /* Right (weapon) */
+  #slot-4{ right:10px; top:50%; transform: translateY(-50%); }
+  /* Bottom-left (ring) */
+  #slot-7{ left:60px; bottom:60px; }
+  /* Bottom (belt) */
+  #slot-8{ left:50%; bottom:10px; transform: translateX(-50%); }
+  /* Bottom-right (boots) */
+  #slot-9{ right:60px; bottom:60px; }
+
+  /* Mobile: shrink board a bit */
+  @media (max-width:600px){
+    .board{ width: 360px; height: 360px; }
+    .center{ width:116px; height:116px; }
+    .center img{ width:96px; height:96px; }
+    .slot{ width:96px; height:148px; }
+    .slot .frame{ width:96px; height:96px; }
+    .slot img{ width:96px; height:96px; }
+    .bubble{ top:108px; width: 200px; }
+    /* Reposition ring of slots tighter */
+    #slot-2{ top:6px; }
+    #slot-1{ left:34px; top:36px; }
+    #slot-3{ right:34px; top:36px; }
+    #slot-6{ left:2px; }
+    #slot-4{ right:2px; }
+    #slot-7{ left:34px; bottom:36px; }
+    #slot-8{ bottom:6px; }
+    #slot-9{ right:34px; bottom:36px; }
+  }
+</style>
 </head>
 <body>
-  <h1>Gear Optimizer</h1>
+  <div class="wrap">
+    <div class="topbar">
+      <button id="openHunters" class="hunters-btn">Hunters</button>
+    </div>
 
-  <div class="gear-grid">
-    <!-- Slot 1 -->
-    <div class="gear-slot">
-      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <button class="reset-btn">Reset</button>
+    <h1>EHT Gear Optimizer</h1>
+
+    <div class="panel">
+      <div class="board" id="board">
+        <!-- Center Character -->
+        <div class="center">
+          <img id="img-center" src="./character.png" alt="Character">
+        </div>
+
+        <!-- Slots around the circle -->
+        <!-- 1 Necklace (top-left) -->
+        <div class="slot" id="slot-1" data-slot="1">
+          <div class="frame"><img src="./necklace.png" alt="Necklace"></div>
+          <div class="bubble">
+            <input type="file" accept="image/*" class="file" />
+            <button class="btn assign">Assign stats</button>
+            <button class="btn btn-red reset">Reset</button>
+            <div class="statArea"></div>
+          </div>
+        </div>
+
+        <!-- 2 Helm (top) -->
+        <div class="slot" id="slot-2" data-slot="2">
+          <div class="frame"><img src="./helm.png" alt="Helm"></div>
+          <div class="bubble">
+            <input type="file" accept="image/*" class="file" />
+            <button class="btn assign">Assign stats</button>
+            <button class="btn btn-red reset">Reset</button>
+            <div class="statArea"></div>
+          </div>
+        </div>
+
+        <!-- 3 Chest (top-right) -->
+        <div class="slot" id="slot-3" data-slot="3">
+          <div class="frame"><img src="./chest.png" alt="Chest"></div>
+          <div class="bubble">
+            <input type="file" accept="image/*" class="file" />
+            <button class="btn assign">Assign stats</button>
+            <button class="btn btn-red reset">Reset</button>
+            <div class="statArea"></div>
+          </div>
+        </div>
+
+        <!-- 4 Weapon (right) -->
+        <div class="slot" id="slot-4" data-slot="4">
+          <div class="frame"><img src="./weapon.png" alt="Weapon"></div>
+          <div class="bubble">
+            <input type="file" accept="image/*" class="file" />
+            <button class="btn assign">Assign stats</button>
+            <button class="btn btn-red reset">Reset</button>
+            <div class="statArea"></div>
+          </div>
+        </div>
+
+        <!-- 6 Gloves (left) -->
+        <div class="slot" id="slot-6" data-slot="6">
+          <div class="frame"><img src="./gloves.png" alt="Gloves"></div>
+          <div class="bubble">
+            <input type="file" accept="image/*" class="file" />
+            <button class="btn assign">Assign stats</button>
+            <button class="btn btn-red reset">Reset</button>
+            <div class="statArea"></div>
+          </div>
+        </div>
+
+        <!-- 7 Ring (bottom-left) -->
+        <div class="slot" id="slot-7" data-slot="7">
+          <div class="frame"><img src="./ring.png" alt="Ring"></div>
+          <div class="bubble">
+            <input type="file" accept="image/*" class="file" />
+            <button class="btn assign">Assign stats</button>
+            <button class="btn btn-red reset">Reset</button>
+            <div class="statArea"></div>
+          </div>
+        </div>
+
+        <!-- 8 Belt (bottom) -->
+        <div class="slot" id="slot-8" data-slot="8">
+          <div class="frame"><img src="./belt.png" alt="Belt"></div>
+          <div class="bubble">
+            <input type="file" accept="image/*" class="file" />
+            <button class="btn assign">Assign stats</button>
+            <button class="btn btn-red reset">Reset</button>
+            <div class="statArea"></div>
+          </div>
+        </div>
+
+        <!-- 9 Boots (bottom-right) -->
+        <div class="slot" id="slot-9" data-slot="9">
+          <div class="frame"><img src="./boots.png" alt="Boots"></div>
+          <div class="bubble">
+            <input type="file" accept="image/*" class="file" />
+            <button class="btn assign">Assign stats</button>
+            <button class="btn btn-red reset">Reset</button>
+            <div class="statArea"></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <!-- Slot 2 -->
-    <div class="gear-slot">
-      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <button class="reset-btn">Reset</button>
-    </div>
-    <!-- Slot 3 -->
-    <div class="gear-slot">
-      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <button class="reset-btn">Reset</button>
-    </div>
-    <!-- Slot 4 -->
-    <div class="gear-slot">
-      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <button class="reset-btn">Reset</button>
-    </div>
-    <!-- Slot 5 (static picture, no stats) -->
-    <div class="gear-slot">
-      <img src="https://i.imgur.com/2yaf2wb.png" alt="Static Gear">
-      <div class="stat-line">Static Item</div>
-    </div>
-    <!-- Slot 6 -->
-    <div class="gear-slot">
-      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <button class="reset-btn">Reset</button>
-    </div>
-    <!-- Slot 7 -->
-    <div class="gear-slot">
-      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <button class="reset-btn">Reset</button>
-    </div>
-    <!-- Slot 8 -->
-    <div class="gear-slot">
-      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <button class="reset-btn">Reset</button>
-    </div>
-    <!-- Slot 9 -->
-    <div class="gear-slot">
-      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <button class="reset-btn">Reset</button>
+
+    <div class="panel totals">
+      <h2>Total Stats</h2>
+      <ul id="totals"></ul>
     </div>
   </div>
 
-  <div class="totals-box">
-    <h2>Total Stats</h2>
-    <ul id="totals"></ul>
+  <!-- Hunter Manager Modal -->
+  <div class="modalBackdrop" id="hmBackdrop">
+    <div class="modal">
+      <button class="closeX" id="hmClose">X</button>
+      <h3>Hunter Manager</h3>
+
+      <div class="row">
+        <select id="hunterSelect" class="select"></select>
+        <input id="newHunterName" class="text" placeholder="New hunter name">
+        <button id="addHunter" class="btn">Add</button>
+      </div>
+
+      <div class="row">
+        <input id="buildName" class="text" placeholder="Build name">
+        <button id="saveBuild" class="btn">Save Build</button>
+      </div>
+
+      <div class="row">
+        <div class="list" id="buildList"></div>
+      </div>
+    </div>
   </div>
 
-  <script>
-    const stats = [
-      "Attack +10%",
-      "Attack +20%",
-      "Attack Speed +5%",
-      "Attack Speed +10%",
-      "Crit Chance +8%",
-      "Crit Chance +12%",
-      "Crit Damage +20%",
-      "Crit Damage +30%",
-      "Boss Damage +15%",
-      "Boss Damage +30%",
-      "Evasion +6%",
-      "Evasion +12%",
-      "Defense +12%",
-      "HP +500",
-      "Move Speed +26%",
-      "Accuracy +10%"
-    ];
+<script>
+/* ===== Data & helpers ===== */
+const STAT_OPTIONS = [
+  "Attack +10%","Attack +20%",
+  "Attack Speed +5%","Attack Speed +10%",
+  "Crit Chance +8%","Crit Chance +12%",
+  "Crit Damage +20%","Crit Damage +30%",
+  "Boss Damage +15%","Boss Damage +30%",
+  "Evasion +6%","Evasion +12%",
+  "Defense +12%","HP +500",
+  "Move Speed +26%","Accuracy +10%"
+];
 
-    function fillDropdown(dropdown) {
-      stats.forEach((stat) => {
-        const option = document.createElement("option");
-        option.value = stat;
-        option.textContent = stat;
-        dropdown.appendChild(option);
-      });
+function parseStat(text){
+  const [kPart, vPartRaw] = text.split(" +");
+  if(!vPartRaw) return null;
+  const key = kPart.trim();
+  const suffix = vPartRaw.includes("%") ? "%" : "";
+  const num = parseInt(vPartRaw,10) || 0;
+  return {key, num, suffix};
+}
 
-      dropdown.addEventListener("change", function () {
-        if (dropdown.value) {
-          const statLine = document.createElement("div");
-          statLine.textContent = dropdown.value;
-          statLine.classList.add("stat-line");
-          dropdown.replaceWith(statLine);
-          updateTotals();
-        }
+function updateTotals(){
+  const totals = {};
+  document.querySelectorAll(".stat-line").forEach(line=>{
+    const t = line.textContent.trim();
+    if(!t) return;
+    const ps = parseStat(t);
+    if(!ps) return;
+    if(!totals[ps.key]) totals[ps.key] = {value:0, suffix:ps.suffix};
+    totals[ps.key].value += ps.num;
+  });
+  const ul = document.getElementById("totals");
+  ul.innerHTML = "";
+  Object.keys(totals).sort().forEach(k=>{
+    const li = document.createElement("li");
+    li.textContent = `${k} +${totals[k].value}${totals[k].suffix}`;
+    ul.appendChild(li);
+  });
+}
+
+/* ===== Slot behavior ===== */
+function makeSelect(){
+  const sel = document.createElement("select");
+  sel.className = "select";
+  const blank = document.createElement("option");
+  blank.value = ""; blank.textContent = "Choose stat...";
+  sel.appendChild(blank);
+  STAT_OPTIONS.forEach(s=>{
+    const o = document.createElement("option");
+    o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+  return sel;
+}
+
+function attachSlotLogic(slot){
+  const frame = slot.querySelector(".frame");
+  const bubble = slot.querySelector(".bubble");
+  const fileInput = slot.querySelector(".file");
+  const assignBtn = slot.querySelector(".assign");
+  const resetBtn = slot.querySelector(".reset");
+  const img = slot.querySelector("img");
+  const statArea = slot.querySelector(".statArea");
+
+  // Toggle bubble on frame tap
+  frame.addEventListener("click",(e)=>{
+    e.stopPropagation();
+    document.querySelectorAll(".slot").forEach(s=>s.classList.remove("active"));
+    slot.classList.add("active");
+  });
+
+  // Upload new gear (local preview)
+  fileInput.addEventListener("change", (e)=>{
+    const file = e.target.files?.[0];
+    if(!file) return;
+    const rd = new FileReader();
+    rd.onload = ()=>{ img.src = rd.result; };
+    rd.readAsDataURL(file);
+  });
+
+  // Assign up to 4 stats
+  assignBtn.addEventListener("click", ()=>{
+    // If already assigned, don't spawn more than remaining selects
+    const existing = statArea.querySelectorAll(".select, .stat-line").length;
+    const lines = statArea.querySelectorAll(".stat-line").length;
+    const selects = statArea.querySelectorAll(".select").length;
+    const remaining = 4 - (lines + selects);
+    for(let i=0;i<remaining;i++){
+      const sel = makeSelect();
+      sel.addEventListener("change", ()=>{
+        if(!sel.value) return;
+        const div = document.createElement("div");
+        div.className = "stat-line";
+        div.textContent = sel.value;
+        sel.replaceWith(div);
+        updateTotals();
       });
+      statArea.appendChild(sel);
     }
+  });
 
-    function parseStat(statText) {
-      const parts = statText.split(" +");
-      const key = parts[0].trim();
-      const value = parts[1];
-      let num = parseInt(value);
-      let suffix = value.includes("%") ? "%" : "";
-      return { key, num, suffix };
-    }
+  // Reset slot (stats only)
+  resetBtn.addEventListener("click", ()=>{
+    statArea.innerHTML = "";
+    updateTotals();
+  });
+}
 
-    function updateTotals() {
-      const totals = {};
-      document.querySelectorAll(".stat-line").forEach(line => {
-        if (line.textContent !== "Static Item") {
-          const { key, num, suffix } = parseStat(line.textContent);
-          if (!totals[key]) totals[key] = { value: 0, suffix: suffix };
-          totals[key].value += num;
-        }
-      });
+// Click outside closes any bubble
+document.addEventListener("click", ()=>{
+  document.querySelectorAll(".slot").forEach(s=>s.classList.remove("active"));
+});
 
-      const totalsList = document.getElementById("totals");
-      totalsList.innerHTML = "";
-      Object.keys(totals).forEach(key => {
-        const li = document.createElement("li");
-        li.textContent = `${key} +${totals[key].value}${totals[key].suffix}`;
-        totalsList.appendChild(li);
-      });
-    }
+// Init all slots
+document.querySelectorAll(".slot").forEach(attachSlotLogic);
 
-    // Initialize all dropdowns
-    document.querySelectorAll(".dropdown").forEach(fillDropdown);
+// Totals recalc if anything changes initially
+updateTotals();
 
-    // Reset button logic
-    const gearSlots = document.querySelectorAll(".gear-slot");
-    gearSlots.forEach((slot) => {
-      const resetBtn = slot.querySelector(".reset-btn");
-      if (resetBtn) {
-        resetBtn.addEventListener("click", () => {
-          // Remove all stat lines
-          slot.querySelectorAll(".stat-line").forEach(line => line.remove());
-          // Remove old dropdowns (if any left)
-          slot.querySelectorAll(".dropdown").forEach(dd => dd.remove());
-          // Recreate 4 dropdowns
-          for (let i = 0; i < 4; i++) {
-            const dropdown = document.createElement("select");
-            dropdown.classList.add("dropdown");
-            fillDropdown(dropdown);
-            slot.insertBefore(dropdown, resetBtn);
-          }
-          updateTotals();
-        });
-      }
+/* ===== Hunter Manager (multi-hunter + builds) ===== */
+const LS_KEY = "eht_gear_optimizer_v1";
+function loadState(){
+  try{
+    return JSON.parse(localStorage.getItem(LS_KEY)) || { hunters: { "Hunter A": { builds:{} } }, currentHunter:"Hunter A" };
+  }catch{ return { hunters: { "Hunter A": { builds:{} } }, currentHunter:"Hunter A" }; }
+}
+function saveState(st){ localStorage.setItem(LS_KEY, JSON.stringify(st)); }
+
+function collectCurrentBuild(){
+  // Capture 8 slots: 1,2,3,4,6,7,8,9 (center is static)
+  const slotIds = [1,2,3,4,6,7,8,9];
+  const slots = {};
+  slotIds.forEach(id=>{
+    const slot = document.getElementById(`slot-${id}`);
+    const img = slot.querySelector("img")?.src || "";
+    const stats = Array.from(slot.querySelectorAll(".stat-line")).map(e=>e.textContent.trim()).filter(Boolean);
+    slots[id] = { img, stats };
+  });
+  return { slots };
+}
+
+function applyBuild(build){
+  if(!build || !build.slots) return;
+  Object.keys(build.slots).forEach(k=>{
+    const slot = document.getElementById(`slot-${k}`);
+    const data = build.slots[k];
+    if(!slot) return;
+    // image
+    const img = slot.querySelector("img");
+    if(img && data.img) img.src = data.img;
+    // stats
+    const statArea = slot.querySelector(".statArea");
+    statArea.innerHTML = "";
+    (data.stats||[]).slice(0,4).forEach(s=>{
+      const div = document.createElement("div");
+      div.className = "stat-line";
+      div.textContent = s;
+      statArea.appendChild(div);
     });
-  </script>
+  });
+  updateTotals();
+}
+
+const hmBackdrop = document.getElementById("hmBackdrop");
+const openHunters = document.getElementById("openHunters");
+const hmClose = document.getElementById("hmClose");
+const hunterSelect = document.getElementById("hunterSelect");
+const newHunterName = document.getElementById("newHunterName");
+const addHunter = document.getElementById("addHunter");
+const buildName = document.getElementById("buildName");
+const saveBuildBtn = document.getElementById("saveBuild");
+const buildList = document.getElementById("buildList");
+
+function refreshHunterUI(){
+  const st = loadState();
+  hunterSelect.innerHTML = "";
+  Object.keys(st.hunters).forEach(h=>{
+    const opt = document.createElement("option");
+    opt.value = h; opt.textContent = h;
+    if(h===st.currentHunter) opt.selected = true;
+    hunterSelect.appendChild(opt);
+  });
+  renderBuildList();
+}
+function renderBuildList(){
+  const st = loadState();
+  const hunter = st.currentHunter;
+  const builds = st.hunters[hunter]?.builds || {};
+  buildList.innerHTML = "";
+  if(Object.keys(builds).length===0){
+    const p = document.createElement("p");
+    p.style.fontSize = "10px"; p.style.opacity=".8";
+    p.textContent = "No builds saved yet.";
+    buildList.appendChild(p);
+    return;
+  }
+  Object.keys(builds).forEach(name=>{
+    const row = document.createElement("div");
+    const loadBtn = document.createElement("button");
+    loadBtn.className = "btn";
+    loadBtn.textContent = `Load: ${name}`;
+    loadBtn.onclick = ()=>{ applyBuild(builds[name]); };
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn btn-red";
+    delBtn.textContent = "Delete";
+    delBtn.onclick = ()=>{
+      const st2 = loadState();
+      delete st2.hunters[st2.currentHunter].builds[name];
+      saveState(st2);
+      renderBuildList();
+    };
+    row.appendChild(loadBtn);
+    row.appendChild(delBtn);
+    buildList.appendChild(row);
+  });
+}
+
+openHunters.addEventListener("click", ()=>{
+  hmBackdrop.style.display = "flex";
+  refreshHunterUI();
+});
+hmClose.addEventListener("click", ()=> hmBackdrop.style.display = "none");
+hmBackdrop.addEventListener("click", (e)=>{ if(e.target===hmBackdrop) hmBackdrop.style.display = "none"; });
+
+addHunter.addEventListener("click", ()=>{
+  const name = (newHunterName.value||"").trim();
+  if(!name) return;
+  const st = loadState();
+  if(!st.hunters[name]) st.hunters[name] = { builds:{} };
+  st.currentHunter = name;
+  saveState(st);
+  newHunterName.value = "";
+  refreshHunterUI();
+});
+
+hunterSelect.addEventListener("change", (e)=>{
+  const st = loadState();
+  st.currentHunter = e.target.value;
+  saveState(st);
+  refreshHunterUI();
+});
+
+saveBuildBtn.addEventListener("click", ()=>{
+  const name = (buildName.value||"").trim();
+  if(!name) return;
+  const st = loadState();
+  const hunter = st.currentHunter;
+  if(!st.hunters[hunter]) st.hunters[hunter] = { builds:{} };
+  st.hunters[hunter].builds[name] = collectCurrentBuild();
+  saveState(st);
+  buildName.value = "";
+  renderBuildList();
+});
+</script>
 </body>
 </html>
