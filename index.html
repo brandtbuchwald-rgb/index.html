@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gear Optimizer</title>
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 20px 0;
+    }
+
+    .gear-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 15px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .gear-slot {
+      background: #222;
+      border: 2px solid #555;
+      border-radius: 10px;
+      padding: 5px;
+      position: relative;
+    }
+
+    .gear-slot img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+    }
+
+    .dropdown {
+      margin-top: 5px;
+      width: 100%;
+    }
+
+    .stats {
+      margin-top: 20px;
+      text-align: left;
+      display: inline-block;
+      background: #222;
+      padding: 15px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gear Optimizer</h1>
+
+  <div class="gear-grid">
+    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
+    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
+    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
+
+    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
+    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
+    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
+
+    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
+    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
+    <div class="gear-slot"><img src="https://i.imgur.com/2yaf2wb.png" alt="Gear"><select class="dropdown"></select></div>
+  </div>
+
+  <div class="stats" id="stats">
+    <h2>Selected Stats</h2>
+    <ul id="stat-list"></ul>
+  </div>
+
+  <script>
+    const stats = [
+      "Attack +10%",
+      "Attack Speed +5%",
+      "Crit Chance +8%",
+      "Crit Damage +20%",
+      "Boss Damage +15%",
+      "Evasion +6%",
+      "Defense +12%",
+      "HP +500"
+    ];
+
+    const dropdowns = document.querySelectorAll(".dropdown");
+    const statList = document.getElementById("stat-list");
+
+    dropdowns.forEach(dropdown => {
+      stats.forEach(stat => {
+        const option = document.createElement("option");
+        option.value = stat;
+        option.textContent = stat;
+        dropdown.appendChild(option);
+      });
+
+      dropdown.addEventListener("change", updateStats);
+    });
+
+    function updateStats() {
+      statList.innerHTML = "";
+      dropdowns.forEach((dropdown, i) => {
+        if (dropdown.value) {
+          const li = document.createElement("li");
+          li.textContent = `Slot ${i+1}: ${dropdown.value}`;
+          statList.appendChild(li);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
