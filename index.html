@@ -32,7 +32,7 @@
       border-radius: 10px;
       padding: 5px;
       position: relative;
-      min-height: 180px;
+      min-height: 220px;
     }
 
     .gear-slot img {
@@ -61,6 +61,23 @@
       margin-top: 4px;
       text-align: center;
     }
+
+    .reset-btn {
+      margin-top: 6px;
+      width: 100%;
+      background: #333;
+      color: #ff6666;
+      border: 1px solid #ff6666;
+      border-radius: 5px;
+      padding: 3px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .reset-btn:hover {
+      background: #ff6666;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -74,6 +91,7 @@
       <select class="dropdown"></select>
       <select class="dropdown"></select>
       <select class="dropdown"></select>
+      <button class="reset-btn">Reset</button>
     </div>
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
@@ -81,6 +99,7 @@
       <select class="dropdown"></select>
       <select class="dropdown"></select>
       <select class="dropdown"></select>
+      <button class="reset-btn">Reset</button>
     </div>
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
@@ -88,6 +107,7 @@
       <select class="dropdown"></select>
       <select class="dropdown"></select>
       <select class="dropdown"></select>
+      <button class="reset-btn">Reset</button>
     </div>
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
@@ -95,6 +115,7 @@
       <select class="dropdown"></select>
       <select class="dropdown"></select>
       <select class="dropdown"></select>
+      <button class="reset-btn">Reset</button>
     </div>
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
@@ -102,6 +123,7 @@
       <select class="dropdown"></select>
       <select class="dropdown"></select>
       <select class="dropdown"></select>
+      <button class="reset-btn">Reset</button>
     </div>
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
@@ -109,6 +131,7 @@
       <select class="dropdown"></select>
       <select class="dropdown"></select>
       <select class="dropdown"></select>
+      <button class="reset-btn">Reset</button>
     </div>
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
@@ -116,6 +139,7 @@
       <select class="dropdown"></select>
       <select class="dropdown"></select>
       <select class="dropdown"></select>
+      <button class="reset-btn">Reset</button>
     </div>
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
@@ -123,6 +147,7 @@
       <select class="dropdown"></select>
       <select class="dropdown"></select>
       <select class="dropdown"></select>
+      <button class="reset-btn">Reset</button>
     </div>
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
@@ -130,6 +155,7 @@
       <select class="dropdown"></select>
       <select class="dropdown"></select>
       <select class="dropdown"></select>
+      <button class="reset-btn">Reset</button>
     </div>
   </div>
 
@@ -153,10 +179,7 @@
       "Accuracy +10%"
     ];
 
-    const dropdowns = document.querySelectorAll(".dropdown");
-
-    dropdowns.forEach((dropdown) => {
-      // Fill dropdown options
+    function fillDropdown(dropdown) {
       stats.forEach((stat) => {
         const option = document.createElement("option");
         option.value = stat;
@@ -164,13 +187,37 @@
         dropdown.appendChild(option);
       });
 
-      // On select, replace dropdown with stat line
       dropdown.addEventListener("change", function () {
         if (dropdown.value) {
           const statLine = document.createElement("div");
           statLine.textContent = dropdown.value;
           statLine.classList.add("stat-line");
           dropdown.replaceWith(statLine);
+        }
+      });
+    }
+
+    // Initialize all dropdowns
+    document.querySelectorAll(".dropdown").forEach(fillDropdown);
+
+    // Reset button logic
+    const gearSlots = document.querySelectorAll(".gear-slot");
+    gearSlots.forEach((slot) => {
+      const resetBtn = slot.querySelector(".reset-btn");
+
+      resetBtn.addEventListener("click", () => {
+        // Remove all stat lines
+        slot.querySelectorAll(".stat-line").forEach(line => line.remove());
+
+        // Remove old dropdowns (if any left)
+        slot.querySelectorAll(".dropdown").forEach(dd => dd.remove());
+
+        // Recreate 4 dropdowns
+        for (let i = 0; i < 4; i++) {
+          const dropdown = document.createElement("select");
+          dropdown.classList.add("dropdown");
+          fillDropdown(dropdown);
+          slot.insertBefore(dropdown, resetBtn);
         }
       });
     });
