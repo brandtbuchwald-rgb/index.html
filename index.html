@@ -78,13 +78,33 @@
       background: #ff6666;
       color: #fff;
     }
+
+    .totals-box {
+      margin-top: 30px;
+      background: #222;
+      border: 1px solid #555;
+      border-radius: 10px;
+      padding: 15px;
+      display: inline-block;
+      text-align: left;
+    }
+
+    .totals-box h2 {
+      color: #ffcc00;
+      margin-bottom: 10px;
+    }
+
+    .totals-box li {
+      color: #4db8ff;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <h1>Gear Optimizer</h1>
 
   <div class="gear-grid">
-    <!-- 9 gear slots -->
+    <!-- Slot 1 -->
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
       <select class="dropdown"></select>
@@ -93,6 +113,7 @@
       <select class="dropdown"></select>
       <button class="reset-btn">Reset</button>
     </div>
+    <!-- Slot 2 -->
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
       <select class="dropdown"></select>
@@ -101,6 +122,7 @@
       <select class="dropdown"></select>
       <button class="reset-btn">Reset</button>
     </div>
+    <!-- Slot 3 -->
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
       <select class="dropdown"></select>
@@ -109,6 +131,7 @@
       <select class="dropdown"></select>
       <button class="reset-btn">Reset</button>
     </div>
+    <!-- Slot 4 -->
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
       <select class="dropdown"></select>
@@ -117,6 +140,12 @@
       <select class="dropdown"></select>
       <button class="reset-btn">Reset</button>
     </div>
+    <!-- Slot 5 (static picture, no stats) -->
+    <div class="gear-slot">
+      <img src="https://i.imgur.com/2yaf2wb.png" alt="Static Gear">
+      <div class="stat-line">Static Item</div>
+    </div>
+    <!-- Slot 6 -->
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
       <select class="dropdown"></select>
@@ -125,6 +154,7 @@
       <select class="dropdown"></select>
       <button class="reset-btn">Reset</button>
     </div>
+    <!-- Slot 7 -->
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
       <select class="dropdown"></select>
@@ -133,6 +163,7 @@
       <select class="dropdown"></select>
       <button class="reset-btn">Reset</button>
     </div>
+    <!-- Slot 8 -->
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
       <select class="dropdown"></select>
@@ -141,6 +172,7 @@
       <select class="dropdown"></select>
       <button class="reset-btn">Reset</button>
     </div>
+    <!-- Slot 9 -->
     <div class="gear-slot">
       <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
       <select class="dropdown"></select>
@@ -149,14 +181,11 @@
       <select class="dropdown"></select>
       <button class="reset-btn">Reset</button>
     </div>
-    <div class="gear-slot">
-      <img src="https://i.imgur.com/2yaf2wb.png" alt="Gear">
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <select class="dropdown"></select>
-      <button class="reset-btn">Reset</button>
-    </div>
+  </div>
+
+  <div class="totals-box">
+    <h2>Total Stats</h2>
+    <ul id="totals"></ul>
   </div>
 
   <script>
@@ -193,7 +222,36 @@
           statLine.textContent = dropdown.value;
           statLine.classList.add("stat-line");
           dropdown.replaceWith(statLine);
+          updateTotals();
         }
+      });
+    }
+
+    function parseStat(statText) {
+      const parts = statText.split(" +");
+      const key = parts[0].trim();
+      const value = parts[1];
+      let num = parseInt(value);
+      let suffix = value.includes("%") ? "%" : "";
+      return { key, num, suffix };
+    }
+
+    function updateTotals() {
+      const totals = {};
+      document.querySelectorAll(".stat-line").forEach(line => {
+        if (line.textContent !== "Static Item") {
+          const { key, num, suffix } = parseStat(line.textContent);
+          if (!totals[key]) totals[key] = { value: 0, suffix: suffix };
+          totals[key].value += num;
+        }
+      });
+
+      const totalsList = document.getElementById("totals");
+      totalsList.innerHTML = "";
+      Object.keys(totals).forEach(key => {
+        const li = document.createElement("li");
+        li.textContent = `${key} +${totals[key].value}${totals[key].suffix}`;
+        totalsList.appendChild(li);
       });
     }
 
@@ -204,22 +262,22 @@
     const gearSlots = document.querySelectorAll(".gear-slot");
     gearSlots.forEach((slot) => {
       const resetBtn = slot.querySelector(".reset-btn");
-
-      resetBtn.addEventListener("click", () => {
-        // Remove all stat lines
-        slot.querySelectorAll(".stat-line").forEach(line => line.remove());
-
-        // Remove old dropdowns (if any left)
-        slot.querySelectorAll(".dropdown").forEach(dd => dd.remove());
-
-        // Recreate 4 dropdowns
-        for (let i = 0; i < 4; i++) {
-          const dropdown = document.createElement("select");
-          dropdown.classList.add("dropdown");
-          fillDropdown(dropdown);
-          slot.insertBefore(dropdown, resetBtn);
-        }
-      });
+      if (resetBtn) {
+        resetBtn.addEventListener("click", () => {
+          // Remove all stat lines
+          slot.querySelectorAll(".stat-line").forEach(line => line.remove());
+          // Remove old dropdowns (if any left)
+          slot.querySelectorAll(".dropdown").forEach(dd => dd.remove());
+          // Recreate 4 dropdowns
+          for (let i = 0; i < 4; i++) {
+            const dropdown = document.createElement("select");
+            dropdown.classList.add("dropdown");
+            fillDropdown(dropdown);
+            slot.insertBefore(dropdown, resetBtn);
+          }
+          updateTotals();
+        });
+      }
     });
   </script>
 </body>
